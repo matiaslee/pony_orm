@@ -5,8 +5,9 @@ Un repo donde hay un Pony orm galopando por acá o por alla.
 
 1. Qué pensaba yo que era programar durante mi vida acádemica y que pienso ahora qué es programar (por si me olvide: lo de siempre + saber de frameworks + testear). 
 2. Usen la documentación oficial. Siempre va a estar ahí. 
-3. Un buen equipo de desarrollo es previsible. Si digo "Voy a hacer A", entonces A se hace. Si se va a ir todo al caño es bueno saberlo con tiempo.
+3. Un buen equipo de desarrollo es previsible. Si digo "Voy a hacer A", entonces A se hace. Si se va a ir todo al caño, avisen con tiempo, es bueno saberlo para manejar las expectativas.
 4. Participen en comunidades. Mirense videos de charlas en eventos. Cuando se acabe la pandemia, busquen ampliar sus circulos sociales. 
+5. Lean libros. 
 
 
 ## Instalación
@@ -68,8 +69,31 @@ Si volvemos a ejecutar `cat example.sqlite` en la otra consola deberíamos ver q
 
 Veamos el archivo `some_functions.py`. 
 
-   - `load_more_data`: carga algunos datos.
-   - `load_more_data_with_another_way_of_using_db_session` carga más datos usando de otro forma el decorator `db_session`. 
+   - `load_more_data`: carga algunos datos usando el decorador/decorator `db_session`. 
+   - `load_more_data_with_another_way_of_using_db_session` usa el with statement (con `db_session`) para cargar datos. Esto permite conexiones dentro de funciones. 
+
+Corramos las funciones
+```
+>>> from some_functions import *
+>>> load_more_data()
+>>> load_more_data_with_another_way_of_using_db_session()
+
+```
+Veamos que tenemos datos datos para acceder:
+```
+>>> Person.select().show()
+id|name  |age|nickname
+--+------+---+--------
+1 |Kate  |33 |        
+2 |John  |20 |        
+3 |Mary  |22 |        
+4 |Bob   |30 |        
+5 |Juan  |20 |        
+6 |Maria |22 |        
+7 |Bobito|30 |        
+>>> 
+
+```
 
 ## Queries 
 
@@ -95,6 +119,9 @@ id|name  |age|nickname
 Podemos ver que query de sql se realiza si activamos el modo debug: 
 
 ```
+>>> from pony.orm import set_sql_debug
+>>> set_sql_debug(True)
+
 >>> select(p for p in Person if p.age > 20).show()
 SELECT "p"."id", "p"."name", "p"."age", "p"."nickname"
 FROM "Person" "p"
@@ -106,6 +133,7 @@ id|name  |age|nickname
 3 |Bob   |30 |        
 5 |Maria |22 |        
 6 |Bobito|30 |        
+
 >>> set_sql_debug(False)
 >>>
 ```
@@ -295,7 +323,7 @@ id|nombre
 Vamos a crear ahora a una profesora  y agregarla como docente de la materia que creamos. 
 
 ```
->>> laura = Profesor(name='Laura')
+>>> laura = Profesor(nombre='Laura')
 >>> ingenieria.profesores.select().show()
 id|nombre
 --+------
@@ -320,6 +348,51 @@ id|nombre
 2 |Laura 
 >>> commit()
 ```
+
+La función `show`, te muestra las relaciones "to-one":
+
+```
+>>> Car.select().show()
+id|make   |model         |owner    
+--+-------+--------------+---------
+1 |Toyota |Prius         |Person[4]
+2 |Ferrari|Prius Otra vez|Person[7]
+
+```
+
+Pero no te muestra las relaciones "to many": 
+
+```
+>>> Person.select().show()
+id|name  |age|nickname
+--+------+---+--------
+1 |Kate  |33 |        
+2 |John  |20 |        
+3 |Mary  |22 |        
+4 |Bob   |30 |        
+5 |Juan  |20 |        
+6 |Maria |22 |        
+7 |Bobito|30 |        
+```
+
+Podemos hacer queries de objetos en función de atributos de low objetos a los que se relaciona. Por ejemplo, podemos seleccionar los autos con dueños mayores a 25 años:
+
+```
+>>> select(car for car in Car if car.owner.age > 25).show()
+id|make   |model         |owner    
+--+-------+--------------+---------
+1 |Toyota |Prius         |Person[4]
+2 |Ferrari|Prius Otra vez|Person[7]
+
+```
+
+O seleccionar directamente objectos de la relacion, por ejemplo, los dueños de autos mayores a 30:
+
+```
+select(car.owner for car in Car if car.owner.age > 30).show()
+```
+
+
 
 Fin! 
 

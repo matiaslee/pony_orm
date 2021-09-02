@@ -28,7 +28,7 @@ def load_more_data_with_another_way_of_using_db_session():
     people = [
         ('Juan',20),
         ('Maria',22),
-        ('Bobito', 30),
+        ('Bobito', 99),
     ]
 
     # Esta forma permite tener commits dentro de la misma función. 
